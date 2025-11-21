@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import socket
+
 try:
     import dns.resolver
 except ImportError:
@@ -41,6 +42,7 @@ def init_db():
         except sqlite3.OperationalError:
             pass
         conn.commit()
+
 init_db()
 
 # ==================== SESSION SETUP ====================
@@ -56,19 +58,14 @@ def validate_password(password):
     return len(password) >= 6
 
 def validate_email_real(email):
-    # Step 1: Basic syntax
     if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
         return False
-
     domain = email.split('@')[1]
-
     try:
-        # Try MX record first
         dns.resolver.resolve(domain, 'MX')
         return True
     except Exception:
         try:
-            # Fallback: check if domain resolves (A record)
             socket.gethostbyname(domain)
             return True
         except Exception:
@@ -88,22 +85,33 @@ def show_login():
     st.title("🔐 Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
+    
     if st.button("Login"):
         if not username or not password:
             st.warning("Please fill all fields.")
         else:
-            with sqlite3.connect("database.db") as conn:
-                c = conn.cursor()
-                c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-                user = c.fetchone()
-            if user:
+            # Admin login via secrets
+            if username == st.secrets["ADMIN_USER"] and password == st.secrets["ADMIN_PASS"]:
                 st.success(f"Welcome, {username}!")
                 st.session_state.logged_in = True
-                st.session_state.role = user[4]
-                st.session_state.user_id = user[0]
+                st.session_state.role = "admin"
+                st.session_state.user_id = None
                 st.session_state.page = "dashboard"
             else:
-                st.error("Invalid username or password.")
+                # Regular user login
+                with sqlite3.connect("database.db") as conn:
+                    c = conn.cursor()
+                    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+                    user = c.fetchone()
+                if user:
+                    st.success(f"Welcome, {username}!")
+                    st.session_state.logged_in = True
+                    st.session_state.role = user[4]
+                    st.session_state.user_id = user[0]
+                    st.session_state.page = "dashboard"
+                else:
+                    st.error("Invalid username or password.")
+    
     col1, col2 = st.columns(2)
     with col1:
         if st.button("New User? Register"):
@@ -174,6 +182,7 @@ def show_admin_dashboard():
     option = st.sidebar.radio("Navigate", admin_options, index=admin_options.index(st.session_state.admin_option))
     st.session_state.admin_option = option
 
+    # Home metrics
     if option == "Home":
         st.markdown("<h1 style='text-align:center; "
                     "background: linear-gradient(90deg, #667eea, #764ba2, #f6d365);"
@@ -193,6 +202,7 @@ def show_admin_dashboard():
         col2.metric("⭐ Ratings", rating_count)
         col3.metric("📬 Pending Complaints", complaint_count)
 
+    # Users table
     elif option == "Users":
         st.markdown("<h2 style='color:#4facfe;'>👥 Registered Users</h2>", unsafe_allow_html=True)
         with sqlite3.connect("database.db") as conn:
@@ -201,6 +211,7 @@ def show_admin_dashboard():
             df = pd.DataFrame(c.fetchall(), columns=["Username", "Email", "Role"])
         st.dataframe(df)
 
+    # Ratings table
     elif option == "Ratings":
         st.markdown("<h2 style='color:#f59e0b;'>⭐ Ratings</h2>", unsafe_allow_html=True)
         with sqlite3.connect("database.db") as conn:
@@ -209,6 +220,7 @@ def show_admin_dashboard():
             df = pd.DataFrame(c.fetchall(), columns=["User ID", "Rating", "Date"])
         st.dataframe(df)
 
+    # Complaints table
     elif option == "Complaints":
         st.markdown("<h2 style='color:#ef4444;'>📬 Complaints</h2>", unsafe_allow_html=True)
         with sqlite3.connect("database.db") as conn:
@@ -230,6 +242,7 @@ def show_admin_dashboard():
                             conn.commit()
                         st.experimental_rerun()
 
+    # Logout
     elif option == "Logout":
         if st.button("Confirm Logout"):
             st.session_state.logged_in = False
@@ -291,19 +304,12 @@ def show_user_website():
                     st.subheader("🛡 Recommended Precautions:")
                     for i,p in enumerate(disease_precautions[predicted_disease],1):
                         st.write(f"{i}. {p}")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        bundle = joblib.load("disease_prediction_bundle.pkl")
-        model = bundle["model"]
-        mlb = bundle["mlb"]
-        label_encoder = bundle["label_encoder"]
-        disease_precautions = bundle["disease_precautions"]
 
     # ------------------ ABOUT ------------------
     elif st.session_state.section == "about":
         card(
             "<h2 style='color:#4facfe; font-weight:bold;'>ℹ About PredictNCure</h2>"
-            "<p style='font-size:1rem; color:#374151;'>PredictNCure is a smart health assistant that helps you understand your symptoms and provides a possible disease prediction. It also gives clear and useful precautions so you can take the right steps early. Our goal is to make health guidance simple, quick, and accessible for everyone.</p>",
+            "<p style='font-size:1rem; color:#374151;'>PredictNCure is a professional tool to help users predict diseases based on their symptoms and provides clear, actionable precautions for healthier living.</p>",
             bg="#fef9f9"
         )
 
@@ -341,7 +347,6 @@ def show_user_website():
                 st.session_state.temp_complaint=""
             else:
                 st.warning("Please enter a complaint first.")
-# ...
 
 # ==================== MAIN ROUTER ====================
 def main():
@@ -359,5 +364,4 @@ def main():
             show_user_website()
 
 if __name__=="__main__":
-
     main()
