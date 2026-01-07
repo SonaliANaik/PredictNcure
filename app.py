@@ -13,7 +13,7 @@ import gdown
 import os
 
 def download_if_missing_drive(file_id, filename):
-    """Download file from Google Drive if it doesn't exist locally"""
+    """Download file from Google Drive"""
     if not os.path.exists(filename):
         with st.spinner(f"Downloading {filename} from Google Drive..."):
             url = f"https://drive.google.com/uc?id={file_id}"
@@ -142,8 +142,9 @@ def validate_email_real(email: str):
             return False, "Email domain does not resolve."
 
 # ---------------- LOAD RESOURCES ----------------
+@st.cache_resource
 def load_resources():
-    # Download both models from Google Drive if missing
+    
     download_if_missing_drive("1i2G2cUL-OLr-H1x3hqRJB-qrO6K_Um_9", "lgb_fast.pkl")
     download_if_missing_drive("1Y4TOBbA862rYfN_2aZbtu1RvzfZ3rLs2", "xgb_fast.pkl")
     download_if_missing_drive("1i4aZqF5mESX4lLcfKqnwnt8m3d2U7xBD", "Diseases_and_Symptoms_dataset.csv")
@@ -151,7 +152,7 @@ def load_resources():
     model_files = ["lgb_fast.pkl", "xgb_fast.pkl"]
     enc_files = ["disease_encoder.pkl"]
 
-    # Your existing code for loading encoder and dataset
+    
     model_path = next((x for x in model_files if os.path.exists(x)), None)
     enc_path = next((x for x in enc_files if os.path.exists(x)), None)
 
@@ -499,6 +500,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
