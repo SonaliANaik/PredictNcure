@@ -196,25 +196,49 @@ def show_login():
     st.title("🔐 Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
+
     if st.button("Login"):
         if not username or not password:
             st.warning("Please fill all fields.")
+            return
+
+        # ---------- ADMIN LOGIN (STREAMLIT SECRETS) ----------
+        if (
+            "ADMIN_USERNAME" in st.secrets
+            and "ADMIN_PASSWORD" in st.secrets
+            and username == st.secrets["ADMIN_USERNAME"]
+            and password == st.secrets["ADMIN_PASSWORD"]
+        ):
+            st.success("Welcome, Admin!")
+            st.session_state.logged_in = True
+            st.session_state.role = "admin"
+            st.session_state.user_id = -1
+            st.session_state.page = "dashboard"
+            return
+
+        # ---------- NORMAL USER LOGIN (SQLITE) ----------
+        with sqlite3.connect("database.db") as conn:
+            c = conn.cursor()
+            c.execute(
+                "SELECT * FROM users WHERE username=? AND password=?",
+                (username, password)
+            )
+            user = c.fetchone()
+
+        if user:
+            st.success(f"Welcome, {username}!")
+            st.session_state.logged_in = True
+            st.session_state.role = user[4]
+            st.session_state.user_id = user[0]
+            st.session_state.page = "dashboard"
         else:
-            with sqlite3.connect("database.db") as conn:
-                c = conn.cursor()
-                c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-                user = c.fetchone()
-            if user:
-                st.success(f"Welcome, {username}!")
-                st.session_state.logged_in = True
-                st.session_state.role = user[4]
-                st.session_state.user_id = user[0]
-                st.session_state.page = "dashboard"
-            else:
-                st.error("Invalid username or password.")
+            st.error("Invalid username or password.")
+
     col1, col2 = st.columns(2)
-    if col1.button("New User? Register"): st.session_state.page = "register"
-    if col2.button("Forgot Password?"): st.session_state.page = "forgot"
+    if col1.button("New User? Register"):
+        st.session_state.page = "register"
+    if col2.button("Forgot Password?"):
+        st.session_state.page = "forgot"
 
 def show_register():
     st.title("📝 Register")
@@ -473,4 +497,5 @@ def main():
             show_user_website()
 
 if __name__ == "__main__":
+
     main()
