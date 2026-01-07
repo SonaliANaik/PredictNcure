@@ -4,4 +4,8 @@ joblib
 scikit-learn
 numpy
 dnspython
-scikit-learn
+fuzzywuzzy
+python-Levenshtein
+streamlit-tags
+xgboost
+lightgbm
