@@ -147,7 +147,8 @@ def load_resources():
     # Download both models from Google Drive if missing
     download_if_missing_drive("1i2G2cUL-OLr-H1x3hqRJB-qrO6K_Um_9", "lgb_fast.pkl")
     download_if_missing_drive("1Y4TOBbA862rYfN_2aZbtu1RvzfZ3rLs2", "xgb_fast.pkl")
-
+    download_if_missing_drive("1i4aZqF5mESX4lLcfKqnwnt8m3d2U7xBD", "Diseases_and_Symptoms_dataset.csv")
+    
     model_files = ["lgb_fast.pkl", "xgb_fast.pkl"]
     enc_files = ["disease_encoder.pkl"]
 
@@ -499,4 +500,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
