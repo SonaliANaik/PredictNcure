@@ -242,21 +242,21 @@ def show_login():
 
 def show_register():
     st.title("📝 Register")
-    username = st.text_input("Username (min 5 chars, start with letter, no numbers)")
+    username = st.text_input("Username (min 5 chars)")
     email = st.text_input("Email")
-    password = st.text_input("Password (min 6 chars, no spaces)", type="password")
+    password = st.text_input("Password (min 6 chars)", type="password")
     confirm = st.text_input("Confirm Password", type="password")
     if st.button("Register"):
         if not all([username, email, password, confirm]):
             st.warning("Please fill all fields.")
         elif not validate_username(username):
-            st.warning("Invalid username: must be >=5 chars, start with letter, and not contain numbers.")
+            st.warning("Invalid username: Username must contain min 5 chars, start with letter and cannot contain numbers.")
         else:
             ok, msg = validate_email_real(email)
             if not ok:
                 st.warning(f"Invalid email: {msg}")
             elif not validate_password(password):
-                st.warning("Invalid password: min 6 chars and no spaces.")
+                st.warning("Invalid password: Password must contain min 6 chars and no spaces.")
             elif password != confirm:
                 st.warning("Passwords do not match.")
             else:
@@ -499,3 +499,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
