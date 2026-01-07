@@ -142,7 +142,6 @@ def validate_email_real(email: str):
             return False, "Email domain does not resolve."
 
 # ---------------- LOAD RESOURCES ----------------
-@st.cache_resource
 def load_resources():
     # Download both models from Google Drive if missing
     download_if_missing_drive("1i2G2cUL-OLr-H1x3hqRJB-qrO6K_Um_9", "lgb_fast.pkl")
@@ -500,5 +499,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
