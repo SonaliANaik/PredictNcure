@@ -9,3 +9,4 @@ python-Levenshtein
 streamlit-tags
 xgboost
 lightgbm
+gdown
