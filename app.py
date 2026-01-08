@@ -393,7 +393,7 @@ def show_user_website():
                             st.success(f"Primary Disease: {primary} ({conf:.2f}%)")
 
                             st.subheader("Other Possible Diseases")
-                            allowed_gap = 15
+                            allowed_gap = 80
                             others = []
                             for idx in top_idx[1:]:
                                 conf_other = probs[idx] * 100
@@ -500,6 +500,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
